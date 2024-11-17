@@ -1,0 +1,63 @@
+Скріпт до завдання 1.
+-- Створення таблиці "authors"
+CREATE TABLE authors (
+    author_id INT AUTO_INCREMENT PRIMARY KEY,
+    author_name VARCHAR(255) NOT NULL
+);
+-- Створення таблиці "genres"
+CREATE TABLE genres (
+    genre_id INT AUTO_INCREMENT PRIMARY KEY,
+    genre_name VARCHAR(255) NOT NULL
+);
+-- Створення таблиці "books"
+CREATE TABLE books (
+    book_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    publication_year YEAR NOT NULL,
+    author_id INT,
+    genre_id INT,
+    FOREIGN KEY (author_id) REFERENCES authors(author_id),
+    FOREIGN KEY (genre_id) REFERENCES genres(genre_id)
+);
+-- Створення таблиці "users"
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL
+);
+-- Створення таблиці "borrowed_books"
+CREATE TABLE borrowed_books (
+    borrow_id INT AUTO_INCREMENT PRIMARY KEY,
+    book_id INT,
+    user_id INT,
+    borrow_date DATE NOT NULL,
+    return_date DATE,
+    FOREIGN KEY (book_id) REFERENCES books(book_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+Скріпт до завдання 2.
+INSERT INTO authors (author_name) VALUES
+('David Spiegelhalter'),
+('John Tukey');
+
+INSERT INTO genres (genre_name) VALUES
+('Statistics'),
+('Mathematics');
+
+INSERT INTO books (title, publication_year, author_id, genre_id) VALUES
+('The Art of Statistics', 2019, 1, 1),
+('Exploratory Data Analysis', 1977, 2, 1);
+
+INSERT INTO users (username, email) VALUES
+('alice_wonder', 'alice.wonder@example.com'),
+('bob_dillan', 'bob.dillan@example.com');
+
+INSERT INTO borrowed_books (book_id, user_id, borrow_date, return_date) VALUES
+(1, 1, '2024-11-01', '2024-11-10'),
+(2, 2, '2024-11-05', NULL);
+
+SELECT * FROM authors;
+SELECT * FROM genres;
+SELECT * FROM books;
+SELECT * FROM users;
+SELECT * FROM borrowed_books;

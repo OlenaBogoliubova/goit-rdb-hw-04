@@ -1,0 +1,203 @@
+Завдання 3.
+Спочатку визначимо спільні ключі на основі колонок та їхнього змісту, щоб коректно об'єднати таблиці:
+3.1. Таблиці та потенційні спільні ключі
+Categories:
+id – первинний ключ (PK), використовується у зв’язку з products через category_id.
+Customers:
+id – первинний ключ (PK), використовується у зв’язку з orders через customer_id.
+Employees:
+employee_id – первинний ключ (PK), використовується у зв’язку з orders через employee_id.
+Оrder_details:
+id – унікальний ідентифікатор запису.
+order_id – зовнішній ключ (FK), пов’язаний з orders.id.
+product_id – зовнішній ключ (FK), пов’язаний з products.id.
+Orders
+id – первинний ключ (PK), використовується у зв’язку з:
+order_details.order_id.
+customers.id через customer_id.
+employees.employee_id через employee_id.
+shippers.id через shipper_id.
+Products
+id – первинний ключ (PK), використовується у зв’язку з:
+order_details.product_id.
+suppliers.id через supplier_id.
+categories.id через category_id.
+Shippers
+id – первинний ключ (PK), використовується у зв’язку з orders.shipper_id.
+Suppliers
+id – первинний ключ (PK), використовується у зв’язку з products.supplier_id.
+
+ALTER TABLE categories
+ADD CONSTRAINT pk_categories PRIMARY KEY (id);
+
+ALTER TABLE customers
+ADD CONSTRAINT pk_customers PRIMARY KEY (id);
+
+ALTER TABLE employees
+ADD CONSTRAINT pk_employees PRIMARY KEY (employee_id);
+
+ALTER TABLE order_details
+ADD CONSTRAINT pk_order_details PRIMARY KEY (id);
+
+ALTER TABLE orders
+ADD CONSTRAINT pk_orders PRIMARY KEY (id);
+
+ALTER TABLE products
+ADD CONSTRAINT pk_products PRIMARY KEY (id);
+
+ALTER TABLE shippers
+ADD CONSTRAINT pk_shippers PRIMARY KEY (id);
+
+ALTER TABLE suppliers
+ADD CONSTRAINT pk_suppliers PRIMARY KEY (id);
+
+3.2. Ключові зв’язки між таблицями
+Виходячи з аналізу, зв’язки між таблицями будуть такими:
+categories.id ? products.category_id
+customers.id ? orders.customer_id
+employees.employee_id ? orders.employee_id
+order_details.order_id ? orders.id
+order_details.product_id ? products.id
+products.supplier_id ? suppliers.id
+orders.shipper_id ? shippers.id
+
+Зв’язок між products і categories:
+ALTER TABLE products
+ADD CONSTRAINT fk_products_categories
+FOREIGN KEY (category_id)
+REFERENCES categories (id);
+
+Зв’язок між products і suppliers:
+ALTER TABLE products
+ADD CONSTRAINT fk_products_suppliers
+FOREIGN KEY (supplier_id)
+REFERENCES suppliers (id);
+
+Зв’язок між orders і customers:
+ALTER TABLE orders
+ADD CONSTRAINT fk_orders_customers
+FOREIGN KEY (customer_id)
+REFERENCES customers (id);
+
+Зв’язок між orders і employees:
+ALTER TABLE orders
+ADD CONSTRAINT fk_orders_employees
+FOREIGN KEY (employee_id)
+REFERENCES employees (employee_id);
+
+Зв’язок між orders і shippers:
+ALTER TABLE orders
+ADD CONSTRAINT fk_orders_shippers
+FOREIGN KEY (shipper_id)
+REFERENCES shippers (id);
+
+Зв’язок між order_details і orders:
+ALTER TABLE order_details
+ADD CONSTRAINT fk_order_details_orders
+FOREIGN KEY (order_id)
+REFERENCES orders (id);
+
+Зв’язок між order_details і products:
+ALTER TABLE order_details
+ADD CONSTRAINT fk_order_details_products
+FOREIGN KEY (product_id)
+REFERENCES products (id);
+
+3.3. Об’єднання всіх таблиць
+SELECT 
+    orders.id AS order_id,
+    customers.name AS customer_name,
+    employees.first_name AS employee_first_name,
+    employees.last_name AS employee_last_name,
+    shippers.name AS shipper_name,
+    order_details.product_id,
+    products.name AS product_name,
+    categories.name AS category_name,
+    suppliers.name AS supplier_name,
+    order_details.quantity AS quantity,
+    products.price AS product_price,
+    orders.date AS order_date
+FROM orders
+INNER JOIN customers ON orders.customer_id = customers.id
+INNER JOIN employees ON orders.employee_id = employees.employee_id
+INNER JOIN shippers ON orders.shipper_id = shippers.id
+INNER JOIN order_details ON orders.id = order_details.order_id
+INNER JOIN products ON order_details.product_id = products.id
+INNER JOIN categories ON products.category_id = categories.id
+INNER JOIN suppliers ON products.supplier_id = suppliers.id;
+
+       4.1. Кількість рядків у об’єднаних таблицях:
+SELECT COUNT(*) AS total_rows
+FROM orders
+INNER JOIN customers ON orders.customer_id = customers.id
+INNER JOIN employees ON orders.employee_id = employees.employee_id
+INNER JOIN shippers ON orders.shipper_id = shippers.id
+INNER JOIN order_details ON orders.id = order_details.order_id
+INNER JOIN products ON order_details.product_id = products.id
+INNER JOIN categories ON products.category_id = categories.id
+INNER JOIN suppliers ON products.supplier_id = suppliers.id;
+
+       4.2. Кількість рядків у результаті використання LEFT/RIGHT JOIN збігається з результатом INNER JOIN, це означає, що в даних немає "недопов’язаних" записів у лівій/правій таблицях або обидві таблиці повністю збігаються за умовами з'єднання.
+SELECT COUNT(*) AS total_rows
+FROM orders
+LEFT JOIN customers ON orders.customer_id = customers.id
+RIGHT JOIN employees ON orders.employee_id = employees.employee_id
+LEFT JOIN shippers ON orders.shipper_id = shippers.id
+LEFT JOIN order_details ON orders.id = order_details.order_id
+RIGHT JOIN products ON order_details.product_id = products.id
+LEFT JOIN categories ON products.category_id = categories.id
+INNER JOIN suppliers ON products.supplier_id = suppliers.id;
+
+4.3. Рядки, де employee_id > 3 та ? 10
+SELECT *
+FROM employees
+WHERE employee_id > 3 AND employee_id <= 10;
+
+4.4. Групування за іменем категорії, розрахунок кількості рядків у групі та середньої кількості товару (кількість товару знаходиться в order_details.quantity). Спочатку потрібно об'єднати таблиці order_details, products та categories, оскільки quantity знаходиться в order_details, а імена категорій у categories.
+
+SELECT 
+   categories.name AS category_name,
+   COUNT(*) AS total_rows,
+   AVG(order_details.quantity) AS average_quantity
+FROM order_details
+INNER JOIN products ON order_details.product_id = products.id
+INNER JOIN categories ON products.category_id = categories.id
+GROUP BY categories.name;
+
+4.5. Фільтруємо рядки, де середня кількість товару більша за 21
+SELECT 
+   categories.name AS category_name,
+   COUNT(*) AS total_rows,
+   AVG(order_details.quantity) AS average_quantity
+FROM order_details
+INNER JOIN products ON order_details.product_id = products.id
+INNER JOIN categories ON products.category_id = categories.id
+GROUP BY categories.name
+HAVING AVG(order_details.quantity) > 21;
+
+
+     4.6. Сортуємо рядки за спаданням кількості рядків
+SELECT 
+   categories.name AS category_name,
+   COUNT(*) AS total_rows,
+   AVG(order_details.quantity) AS average_quantity
+FROM order_details
+INNER JOIN products ON order_details.product_id = products.id
+INNER JOIN categories ON products.category_id = categories.id
+GROUP BY categories.name
+HAVING AVG(order_details.quantity) > 21
+ORDER BY total_rows DESC;
+
+4.7. Виводимо на екран чотири рядки з пропущенним першим рядком
+SELECT 
+   categories.name AS category_name,
+   COUNT(*) AS total_rows,
+   AVG(order_details.quantity) AS average_quantity
+FROM order_details
+INNER JOIN products ON order_details.product_id = products.id
+INNER JOIN categories ON products.category_id = categories.id
+GROUP BY categories.name
+HAVING AVG(order_details.quantity) > 21
+ORDER BY total_rows DESC
+LIMIT 4 OFFSET 1;
+
